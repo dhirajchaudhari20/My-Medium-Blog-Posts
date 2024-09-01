@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Medium Blog Posts</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,6 +89,29 @@
             margin-right: 10px;
         }
 
+        .edit-btn,
+        .delete-btn {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .edit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .delete-btn {
+            background-color: #ff4c4c;
+        }
+
+        .delete-btn:hover {
+            background-color: #ff0000;
+        }
+
         .footer {
             text-align: center;
             margin-top: 20px;
@@ -123,53 +147,79 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"></script>
     <script>
-        // Load blogs from local storage on page load
         document.addEventListener('DOMContentLoaded', loadBlogs);
 
-        // Add event listener to form submission
         document.getElementById('blog-form').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            // Get the input values
+
             const title = document.getElementById('blog-title').value;
             const url = document.getElementById('blog-url').value;
 
-            // Create a new list item with the blog link
+            // SweetAlert confirmation before adding the blog
+            swal({
+                title: "Are you sure?",
+                text: `Do you want to add the blog titled "${title}"?`,
+                icon: "info",
+                buttons: true,
+            }).then((willAdd) => {
+                if (willAdd) {
+                    addBlog(title, url);
+                    swal("The blog has been added!", {
+                        icon: "success",
+                    });
+                }
+            });
+        });
+
+        function addBlog(title, url) {
             const li = document.createElement('li');
             const blogCounter = document.createElement('span');
             blogCounter.classList.add('blog-counter');
             const a = document.createElement('a');
             a.href = url;
             a.textContent = title;
-            a.target = "_blank"; // Open link in new tab
+            a.target = "_blank";
 
-            // Get the number of current blogs
+            const editBtn = document.createElement('button');
+            editBtn.classList.add('edit-btn');
+            editBtn.textContent = 'Edit';
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.classList.add('delete-btn');
+            deleteBtn.textContent = 'Delete';
+
             let currentBlogCount = document.getElementById('blog-list').childElementCount + 1;
             blogCounter.textContent = currentBlogCount + '.';
 
             li.appendChild(blogCounter);
             li.appendChild(a);
+            li.appendChild(editBtn);
+            li.appendChild(deleteBtn);
 
-            // Append the list item to the blog list
             document.getElementById('blog-list').appendChild(li);
 
-            // Save the blog entry to local storage
             saveBlog(title, url);
 
-            // Clear the input fields
             document.getElementById('blog-title').value = '';
             document.getElementById('blog-url').value = '';
-        });
 
-        // Function to save a blog entry to local storage
+            deleteBtn.addEventListener('click', function() {
+                deleteBlog(li, title);
+            });
+
+            editBtn.addEventListener('click', function() {
+                editBlog(li, title, a);
+            });
+        }
+
         function saveBlog(title, url) {
             let blogs = JSON.parse(localStorage.getItem('blogs')) || [];
             blogs.push({ title, url });
             localStorage.setItem('blogs', JSON.stringify(blogs));
         }
 
-        // Function to load blogs from local storage
         function loadBlogs() {
             let blogs = JSON.parse(localStorage.getItem('blogs')) || [];
             blogs.forEach(function(blog, index) {
@@ -181,11 +231,112 @@
                 a.textContent = blog.title;
                 a.target = "_blank";
 
+                const editBtn = document.createElement('button');
+                editBtn.classList.add('edit-btn');
+                editBtn.textContent = 'Edit';
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.classList.add('delete-btn');
+                deleteBtn.textContent = 'Delete';
+
                 blogCounter.textContent = (index + 1) + '.';
                 li.appendChild(blogCounter);
                 li.appendChild(a);
+                li.appendChild(editBtn);
+                li.appendChild(deleteBtn);
                 document.getElementById('blog-list').appendChild(li);
+
+                deleteBtn.addEventListener('click', function() {
+                    deleteBlog(li, blog.title);
+                });
+
+                editBtn.addEventListener('click', function() {
+                    editBlog(li, blog.title, a);
+                });
             });
+        }
+
+        function deleteBlog(li, title) {
+            swal({
+                title: "Are you sure?",
+                text: `Do you want to delete the blog titled "${title}"?`,
+                icon: "warning",
+                buttons: true,
+                dangerMode: true,
+            }).then((willDelete) => {
+                if (willDelete) {
+                    li.remove();
+                    removeBlogFromLocalStorage(title);
+                    swal("The blog has been deleted!", {
+                        icon: "success",
+                    });
+                    updateBlogNumbers();
+                }
+            });
+        }
+
+        function removeBlogFromLocalStorage(title) {
+            let blogs = JSON.parse(localStorage.getItem('blogs')) || [];
+            blogs = blogs.filter(blog => blog.title !== title);
+            localStorage.setItem('blogs', JSON.stringify(blogs));
+        }
+
+        function updateBlogNumbers() {
+            const blogListItems = document.querySelectorAll('#blog-list li');
+            blogListItems.forEach((li, index) => {
+                li.querySelector('.blog-counter').textContent = (index + 1) + '.';
+            });
+        }
+
+        function editBlog(li, oldTitle, anchorElement) {
+            swal({
+                title: "Edit Blog",
+                content: {
+                    element: "input",
+                    attributes: {
+                        value: oldTitle,
+                        placeholder: "Edit Blog Title",
+                    },
+                },
+                buttons: true,
+            }).then((newTitle) => {
+                if (newTitle) {
+                    swal({
+                        text: "Edit Blog URL",
+                        content: {
+                            element: "input",
+                            attributes: {
+                                value: anchorElement.href,
+                                placeholder: "Edit Blog URL",
+                            },
+                        },
+                        buttons: true,
+                    }).then((newUrl) => {
+                        if (newUrl) {
+                            updateBlog(li, oldTitle, newTitle, newUrl);
+                            swal("The blog has been updated!", {
+                                icon: "success",
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function updateBlog(li, oldTitle, newTitle, newUrl) {
+            anchorElement = li.querySelector('a');
+            anchorElement.textContent = newTitle;
+            anchorElement.href = newUrl;
+            updateBlogInLocalStorage(oldTitle, newTitle, newUrl);
+        }
+
+        function updateBlogInLocalStorage(oldTitle, newTitle, newUrl) {
+            let blogs = JSON.parse(localStorage.getItem('blogs')) || [];
+            const blogIndex = blogs.findIndex(blog => blog.title === oldTitle);
+            if (blogIndex !== -1) {
+                blogs[blogIndex] = { title: newTitle, url: newUrl };
+                localStorage.setItem('blogs', JSON.stringify(blogs));
+            }
         }
     </script>
 </body>
