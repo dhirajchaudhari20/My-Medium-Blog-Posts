@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Medium Blog Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"],
+        input[type="url"] {
+            width: 45%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        ul li {
+            background: #e9ecef;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        ul li a {
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: bold;
+            width: 100%;
+            display: inline-block;
+        }
+
+        ul li a:hover {
+            text-decoration: underline;
+        }
+
+        .blog-counter {
+            color: #007BFF;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .footer a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>My Medium Blog Posts</h1>
+        <form id="blog-form">
+            <input type="text" id="blog-title" placeholder="Enter Blog Title" required>
+            <input type="url" id="blog-url" placeholder="Enter Blog URL" required>
+            <button type="submit">Add Blog</button>
+        </form>
+        <ul id="blog-list">
+            <!-- Blog links will be appended here -->
+        </ul>
+
+        <div class="footer">
+            Made by <strong>Dhiraj Chaudhari</strong> | 
+            <a href="https://www.linkedin.com/in/dhirajchaudhari20/" target="_blank">LinkedIn</a>
+        </div>
+    </div>
+
+    <script>
+        // Load blogs from local storage on page load
+        document.addEventListener('DOMContentLoaded', loadBlogs);
+
+        // Add event listener to form submission
+        document.getElementById('blog-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get the input values
+            const title = document.getElementById('blog-title').value;
+            const url = document.getElementById('blog-url').value;
+
+            // Create a new list item with the blog link
+            const li = document.createElement('li');
+            const blogCounter = document.createElement('span');
+            blogCounter.classList.add('blog-counter');
+            const a = document.createElement('a');
+            a.href = url;
+            a.textContent = title;
+            a.target = "_blank"; // Open link in new tab
+
+            // Get the number of current blogs
+            let currentBlogCount = document.getElementById('blog-list').childElementCount + 1;
+            blogCounter.textContent = currentBlogCount + '.';
+
+            li.appendChild(blogCounter);
+            li.appendChild(a);
+
+            // Append the list item to the blog list
+            document.getElementById('blog-list').appendChild(li);
+
+            // Save the blog entry to local storage
+            saveBlog(title, url);
+
+            // Clear the input fields
+            document.getElementById('blog-title').value = '';
+            document.getElementById('blog-url').value = '';
+        });
+
+        // Function to save a blog entry to local storage
+        function saveBlog(title, url) {
+            let blogs = JSON.parse(localStorage.getItem('blogs')) || [];
+            blogs.push({ title, url });
+            localStorage.setItem('blogs', JSON.stringify(blogs));
+        }
+
+        // Function to load blogs from local storage
+        function loadBlogs() {
+            let blogs = JSON.parse(localStorage.getItem('blogs')) || [];
+            blogs.forEach(function(blog, index) {
+                const li = document.createElement('li');
+                const blogCounter = document.createElement('span');
+                blogCounter.classList.add('blog-counter');
+                const a = document.createElement('a');
+                a.href = blog.url;
+                a.textContent = blog.title;
+                a.target = "_blank";
+
+                blogCounter.textContent = (index + 1) + '.';
+                li.appendChild(blogCounter);
+                li.appendChild(a);
+                document.getElementById('blog-list').appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
